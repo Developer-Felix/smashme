@@ -1,10 +1,23 @@
 {% extends "layouts/base.html" %}
+{% load static %}
 {% block content %}
   <body>
+
+    <!--Barner and Logo image display-->
+    
+
+
     <!-- Start your project here-->
     <div class="container">
       <div class="d-flex justify-content-center align-items-center" style="height: 100vh">
         <div class="text-center">
+          <div class="text-center">
+            <div>
+              <h4>🥰 Smash Me 🥰</h4>
+              <br><br>
+            </div>
+          </div>
+
           <form method="post">
             {% csrf_token %}
             <!-- Email input -->
@@ -37,6 +50,12 @@
           
             <!-- Submit button -->
             <button type="submit" class="btn btn-primary btn-block">Sign in</button>
+            <br><br>
+            <div class="col">
+              <!-- Simple link -->
+              You do not have an account? 
+              <a href="{% url 'users:register' %}">Sign Up</a>
+            </div>
           </form>
         </div>
       </div>

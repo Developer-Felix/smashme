@@ -1,4 +1,7 @@
+from datetime import datetime
+from distutils.ccompiler import gen_lib_options
 from django.shortcuts import redirect, render
+from pytz import utc
 from config.sms import send_otp_to_validate_phone
 from otp.models import Otps
 from otp.views import random_number_generator
@@ -12,17 +15,38 @@ from django.contrib import messages
 from django.contrib.auth.hashers import make_password
 
 def index(request):
-    if request.method == 'POST':
-        phone = request.POST.get('phone')
-        print(phone)
-        password = request.POST.get('password')
-        print(password)
+    username = password = ''
 
-        if phone == '123' and password == '123':
-            return redirect('/customer/home')
-        else:
-            phone == '321' and password == '321'
-            return redirect('/engineer/home')
+    if request.method == "POST":
+        password = request.POST['password']
+        phone_number = request.POST['phone']
+        #if phone number starts with 07 remove the 0 and add +254
+        if phone_number[0] == '0':
+            phone_number = phone_number[1:]
+            phone_number = '+254'+phone_number
+        
+        #if phone_number number does not start with + append + 
+        elif phone_number[0] != '+':
+            phone_number = '+'+phone_number
+
+        # password = make_password('password')
+        # print(password)
+        user = authenticate(username=phone_number, password=password)
+        # if user is not None:
+        login(request,user)
+        acc = Account.objects.all()
+
+        if user.is_authenticated:
+            return redirect('users:customer_home')
+
+        # for acc in acc:
+        #     print(acc.phone_number)
+        #     if acc.phone_number == phone_number:
+        #         print(acc.is_parent)
+        #         if acc.is_parent == True:
+        #             return redirect("users:customer-home")
+        #         if acc.is_child == True:
+        #             return redirect("users:engineer-home")
 
     return render(request, 'index.html')
 
@@ -45,8 +69,10 @@ def register(request):
     if request.method == "POST":
         username = request.POST.get('username')
         phone = request.POST.get('phone')
-        country = request.POST.get('country')
-        pin = request.POST.get('pin')
+        age = request.POST.get('age')
+        pin = request.POST.get('password')
+        gender = request.POST.get('gender')
+        wants = request.POST.get('wants')
 
         #if phone number starts with 07 remove the 0 and add +254
         if phone[0] == '0':
@@ -61,7 +87,7 @@ def register(request):
         if Account.objects.filter(phone_number=phone).exists():
             print("phone number already registered")
             messages.info(request, f"Phone number already registered")
-            return redirect('users:ptc-register')
+            return redirect('users:register')
 
     
 
@@ -69,11 +95,13 @@ def register(request):
         parent = Account(
             phone_number = phone,
             user_name = username,
-            country = country,
+            age = age,
             password=make_password(pin),
-            email = phone + "@gmail.com"
+            email = phone + "@gmail.com",
+            gender = gender,
+            wants = wants,
         )
-        parent.is_parent = True
+        parent.is_customer = True
         
         parent.save()
         messages.info(request, f"You are now registered as {username}")
@@ -126,3 +154,38 @@ def register(request):
     print("Done")
 
     return render(request,'customer/register.html',data)
+
+
+
+def otp(request):
+    if request.method == "POST":
+        phone = request.GET.get('phone')
+        otp = request.POST.get('otp')
+        phone = str(phone)
+        phone = phone[len(phone)-12:]
+        print(phone)
+
+        #Validate otp to authenticate the user
+        validate_otp = Otps.objects.all()
+        print("test1")
+        for otps in validate_otp:
+            print(otps.otp)
+            db_phone = str(otps.phone_number)
+            print(db_phone)
+            new_db_phone = db_phone.replace('+', '')
+            if  str(otp) == str(otps.otp) and str(phone)==new_db_phone:
+                print("test3")
+                if datetime.now().replace(tzinfo=utc) <= (otps.expire_at.replace(tzinfo=utc)):
+                    print("test4")
+                # update validation and mark the otp was successfully validated
+                    Otps.objects.filter(otp=otp).update(is_otp_authenticated=True)
+
+                    print("Authenticated")
+                    return redirect('users:customer_home')
+                else:
+                    print("Fail")
+                    
+
+            else:
+                print("fail2")
+    return render(request,'customer/otp.html')

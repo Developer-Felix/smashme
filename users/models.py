@@ -117,6 +117,7 @@ class Account(AbstractBaseUser, PermissionsMixin):
     phone_number = models.CharField(max_length=20,null=True,blank=True,unique=True)
     password = models.CharField(max_length=20,null=True,blank=True)
     address = models.CharField(max_length=100,null=True,blank=True)
+    email = models.CharField(max_length=100,null=True,blank=True)
     location = models.CharField(max_length=100,null=True,blank=True)
     age = models.IntegerField()
     gender = models.CharField(max_length=255,null=True,blank=True)
@@ -129,8 +130,8 @@ class Account(AbstractBaseUser, PermissionsMixin):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    is_anonymous = False
-    is_authenticated = True
+    # is_anonymous = False
+    # is_authenticated = True
 
     USERNAME_FIELD = 'phone_number'
     REQUIRED_FIELDS = ['user_name','email',]
