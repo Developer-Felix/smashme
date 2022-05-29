@@ -8,10 +8,17 @@
 
                 <div class="text-center">
                     <div>
-                      <h4>🥰 Smash Me 🥰</h4>
-                      <br><br>
+                        <h4>🥰 Smash Me 🥰</h4>
+                        <br><br>
                     </div>
-                  </div>
+                </div>
+
+                {% if message %}
+
+                <div class="alert alert-info">
+                    {{ message }}
+                </div>
+                {% endif %}
 
                 <form method="post">
                     {% csrf_token %}
@@ -30,21 +37,21 @@
                             </div>
                         </div>
 
-                        
+
                     </div>
 
                     <div class="row mb-4">
-                           
+
 
                         <div class="col">
                             <div class="form-group">
                                 <label name="gender" for="exampleFormControlSelect1">What Is Your Gender?</label>
                                 <select class="form-control" id="exampleFormControlSelect1">
-                                  <option>Male</option>
-                                  <option>Female</option>
-                                  <option>Transgener</option>
+                                    <option>Male</option>
+                                    <option>Female</option>
+                                    <option>Transgener</option>
                                 </select>
-                              </div>
+                            </div>
                         </div>
 
                         <div class="col">
@@ -55,11 +62,16 @@
                                     <option>Female</option>
                                     <option>Transgener</option>
                                 </select>
-                              </div>
+                            </div>
                         </div>
-                        
 
-                        
+
+
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="formFile" class="form-label">Enter Profile Picture</label>
+                        <input class="form-control" name="avatar" type="file" id="formFile">
                     </div>
 
                     <!-- Email input -->

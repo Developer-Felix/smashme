@@ -47,7 +47,7 @@
               </a>
               </ul>
             </div>
-
+            {% for user in users %}
             <div class="carousel-item">
               <img
                 class="rounded-circle shadow-1-strong mb-4"
@@ -57,7 +57,7 @@
               />
               <div class="row d-flex justify-content-center">
                 <div class="col-lg-8">
-                  <h5 class="mb-3">Maria Kate</h5>
+                  <h5 class="mb-3">{{user.user_name}}</h5>
                   <p>Photographer</p>
                   <p class="text-muted">
                     <i class="fas fa-quote-left pe-2"></i>
@@ -72,14 +72,14 @@
               <ul
                 class="list-unstyled d-flex justify-content-center text-warning mb-0"
               >
-              <li style="padding-left: 20px;">23 years old</li>
+              <li style="padding-left: 20px;">{{user.age}} years old</li>
 
                 <li style="padding-left: 20px;"><i class="fas fa-heart fa-sm"></i></li>
 
                 <li style="padding-left: 20px;"><i class="far fa-comments fa-sm"></i></li>
               </ul>
             </div>
-            
+            {% endfor %}
           </div>
           <button
             class="carousel-control-prev"
