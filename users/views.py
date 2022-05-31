@@ -1,5 +1,6 @@
 from datetime import datetime
 from distutils.ccompiler import gen_lib_options
+import email
 from django.shortcuts import redirect, render
 from psutil import users
 from pytz import utc
@@ -57,8 +58,13 @@ def index(request):
         login(request,user)
         acc = Account.objects.all()
 
+        
+
         if user.is_authenticated:
-            return redirect('users:customer_home')
+            if user.is_staff == True:
+                return redirect('users:admin_home')
+            if user.is_customer == True:
+                return redirect('users:customer_home')
 
         # for acc in acc:
         #     print(acc.phone_number)
@@ -117,11 +123,21 @@ def customer_home(request):
     }
     return render(request, 'customer/home.html',data)
 
+@login_required
 def chat(request):
     return render(request, 'customer/chat.html')
 
-def engineer_home(request):
-    return render(request, 'engineer/home.html')
+@login_required
+def admin_home(request):
+    female = Account.objects.filter(gender="Female")
+    male = Account.objects.filter(gender="Male")
+    users = Account.objects.all().order_by('-id')
+    data = {
+        'users':users,
+        'male':male,
+        'female':female
+    }
+    return render(request, 'admin/home.html',data)
 
 
 def register(request):
@@ -269,15 +285,22 @@ from django.contrib.auth.decorators import login_required
 @login_required
 def edit_profile(request):
     if request.method == 'POST':
-        u_form = UserUpdateForm(request.POST,request.FILES,instance=request.user)
-        if u_form.is_valid():
-            u_form.save()
-            messages.success(request,f'your account has been updated ')
-            return redirect('profile')
-    else:
-        u_form = UserUpdateForm(instance=request.user)
+        avatar = request.POST.get('avatar')
+        phone = request.POST.get('phone')
+        email = request.POST.get('email')
 
-    context = {
-        'u_form':u_form,
-    }
-    return render(request,'customer/edit_profile.html',context)
+        try:
+            #update the account details of the loged in user
+            Account.objects.filter(phone_number=request.user.phone_number).update(
+               avatar=avatar,
+                phone_number=phone,
+                email=email
+            )
+            messages.info(request, f"Profile updated")
+            return redirect('users:profile_edit')
+        except:
+            messages.info(request, f"Profile Not Updated")
+
+        
+
+    return render(request,'customer/edit_profile.html')

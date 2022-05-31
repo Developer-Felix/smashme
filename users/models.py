@@ -122,6 +122,7 @@ class Account(AbstractBaseUser, PermissionsMixin):
     age = models.IntegerField()
     gender = models.CharField(max_length=255,null=True,blank=True)
     wants = models.CharField(max_length=255,null=True,blank=True)
+    is_staff = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     is_customer = models.BooleanField(default=False)
     latitude = models.FloatField(default=0)
