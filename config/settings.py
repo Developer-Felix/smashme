@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'users',
     'otp',
     'rest_framework',
+    'likes',
     'corsheaders',
     'rest_framework.authtoken',
     'django_filters',

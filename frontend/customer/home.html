@@ -48,6 +48,7 @@
               </ul>
             </div>
             {% for user in users %}
+            
             <div class="carousel-item">
               <img
                 class="rounded-circle shadow-1-strong mb-4"
@@ -72,11 +73,28 @@
               <ul
                 class="list-unstyled d-flex justify-content-center text-warning mb-0"
               >
-              <li style="padding-left: 20px;">{{user.age}} years old</li>
+              <li style="padding-left: 20px;">{{user.age}} years old {{user.gender}}</li>
 
-                <li style="padding-left: 20px;"><i class="fas fa-heart fa-sm"></i></li>
+              <br>
 
-                <li style="padding-left: 20px;"><i class="far fa-comments fa-sm"></i></li>
+                
+                <form action="" method="post">
+                  {% csrf_token %}
+                <input type="hidden" name="user_id" value="{{user.id}}">
+                   
+                <!--Submit like to django backend -->
+                <div style="padding: 10px;">
+                  <button  type="submit" class="btn btn-warning" >
+                    <i class="fas fa-heart fa-sm"></i>
+                  </button>
+                </div>
+                
+              </form>
+              <div style="padding: 10px;">
+                <button  type="submit" class="btn btn-warning" name="">
+                  <i class="far fa-comments fa-sm"></i>
+                </button>
+              </div>
               </ul>
             </div>
             {% endfor %}

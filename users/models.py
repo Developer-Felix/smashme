@@ -142,4 +142,4 @@ class Account(AbstractBaseUser, PermissionsMixin):
         db_table = "tbl_accounts"
 
     def __str__(self):
-        return self.name
+        return self.user_name

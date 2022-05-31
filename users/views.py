@@ -4,8 +4,10 @@ from django.shortcuts import redirect, render
 from psutil import users
 from pytz import utc
 from config.sms import send_otp_to_validate_phone
+from likes.models import Likes
 from otp.models import Otps
 from otp.views import random_number_generator
+from users.forms import UserUpdateForm
 
 from users.models import Account
 
@@ -14,6 +16,18 @@ from django.urls import reverse
 
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password
+
+#create logout logic
+from django.contrib.auth.decorators import login_required
+
+@login_required
+def logout_view(request):
+    logout(request)
+    return redirect('users:index')
+
+@login_required
+def profile(request):
+    return render(request, 'customer/profile.html')
 
 def index(request):
     username = password = ''
@@ -29,6 +43,12 @@ def index(request):
         #if phone_number number does not start with + append + 
         elif phone_number[0] != '+':
             phone_number = '+'+phone_number
+
+        #if user does not exist to return a message to the user
+        if not Account.objects.filter(phone_number=phone_number):
+            messages.error(request, 'User does not exist')
+            return redirect('users:index')
+        
 
         # password = make_password('password')
         # print(password)
@@ -51,15 +71,41 @@ def index(request):
 
     return render(request, 'index.html')
 
+@login_required
 def customer_home(request):
+    # likes = Likes.objects.all()
+    # print(likes)
+    # if request.method == "POST":
+    #     liked_by = request.user.id
+    #     print(liked_by)
+    #     user_liked = request.POST.get('user_id')
+    #     print(user_liked)
+
+    #     #filter the liked_by and user_liked to know if they are already liked and disliked or not
+    #     liked = Likes.objects.filter(liked_by=Account.objects.filter(id=liked_by), user_liked=Account.objects.filter(id=user_liked))
+    #     print(liked)
+    #     if liked:
+    #         liked.delete()
+    #         print("deleted")
+    #     else:
+    #         like = Likes(liked_by=liked_by, user_liked=user_liked)
+    #         like.save()
+    #         print("saved")
+
 
     def get_patners():
         if request.user.wants == "Male":
-            users = Account.objects.filter(gender="Male")
+            users = Account.objects.filter(gender="Male",wants="Male")
             return users
     
         if request.user.wants == "Female":
-            users = Account.objects.filter(gender="Female")
+            users = Account.objects.filter(gender="Female",wants="Female")
+
+            return users
+        
+        if request.user.wants == "Female":
+            users = Account.objects.filter(wants="Male")
+
             return users
     
         if request.user.wants == "Trans-Gender":
@@ -67,7 +113,7 @@ def customer_home(request):
             return users
     
     data = {
-        'users': Account.objects.all()
+        'users': get_patners()
     }
     return render(request, 'customer/home.html',data)
 
@@ -87,13 +133,19 @@ def register(request):
         pin = request.POST.get('password')
         gender = request.POST.get('gender')
         wants = request.POST.get('wants')
-        avatar = request.POST.get('avatar')
+        print(username)
+        print(phone)
+        print(age)
+        print(gender)
+        print(wants)
 
-        if age < 18:
+        #check if age is blank and return messages
+
+
+        if int(age) <= 18:
             print("You are bellow 18 years")
             messages.info(request, f"You are bellow 18 years")
             return redirect('users:register')
-
 
         #if phone number starts with 07 remove the 0 and add +254
         if phone[0] == '0':
@@ -118,10 +170,8 @@ def register(request):
             user_name = username,
             age = age,
             password=make_password(pin),
-            email = phone + "@gmail.com",
             gender = gender,
             wants = wants,
-            avatar = avatar,
         )
 
         parent.is_customer = True
@@ -132,54 +182,56 @@ def register(request):
         user = authenticate(request,username=phone,password=pin)
         login(request,parent)
 
-        phonenumber = phone
-        otp_number = random_number_generator(size=4)
-        try:
-            #Check number if it exist
-            check_number_if_otp_exists = Otps.objects.filter(phone_number=phone)
-        except:
-            check_number_if_otp_exists = {}
+        return redirect('users:customer_home')
+
+    #     phonenumber = phone
+    #     otp_number = random_number_generator(size=4)
+    #     try:
+    #         #Check number if it exist
+    #         check_number_if_otp_exists = Otps.objects.filter(phone_number=phone)
+    #     except:
+    #         check_number_if_otp_exists = {}
             
-        if bool(check_number_if_otp_exists) == False:
-            otp = Otps(
-                    phone_number = phone,
-                    otp = otp_number
-            )
-            print(otp_number)
-            send_otp_to_validate_phone(
-                phone=phone,
-                otp=otp_number
-            )
-            otp.save()
-            print("OTP Saved Sucessfull")
+    #     if bool(check_number_if_otp_exists) == False:
+    #         otp = Otps(
+    #                 phone_number = phone,
+    #                 otp = otp_number
+    #         )
+    #         print(otp_number)
+    #         send_otp_to_validate_phone(
+    #             phone=phone,
+    #             otp=otp_number
+    #         )
+    #         otp.save()
+    #         print("OTP Saved Sucessfull")
 
-                # add otp id to the user model to authenticate before login
-            try:
-                Account.objects.filter(phone_number=phone).update(
-                        otp=Otps.objects.filter(otp=otp_number))
-            except:
-                print("none")
+    #             # add otp id to the user model to authenticate before login
+    #         try:
+    #             Account.objects.filter(phone_number=phone).update(
+    #                     otp=Otps.objects.filter(otp=otp_number))
+    #         except:
+    #             print("none")
 
-        elif bool(check_number_if_otp_exists) == True:
-            new_otp = Otps.objects.filter(phone_number=phone).update(otp=otp_number)
-            print(otp)
-            print("OTP updated")
-            send_otp_to_validate_phone(
-                phone=phone,
-                otp=otp_number
-            )
-            messages.info(request, f"OTP has been sent to your phone number")
+    #     elif bool(check_number_if_otp_exists) == True:
+    #         new_otp = Otps.objects.filter(phone_number=phone).update(otp=otp_number)
+    #         print(otp)
+    #         print("OTP updated")
+    #         send_otp_to_validate_phone(
+    #             phone=phone,
+    #             otp=otp_number
+    #         )
+    #         messages.info(request, f"OTP has been sent to your phone number")
 
-        return redirect('otp/?phone='+phone)
+    #     return redirect('otp/?phone='+phone)
 
-    # except:
-    #     return redirect('users:ptc-register')
-    print("Done")
+    # # except:
+    # #     return redirect('users:ptc-register')
+    # print("Done")
 
     return render(request,'customer/register.html',data)
 
 
-
+@login_required
 def otp(request):
     if request.method == "POST":
         phone = request.GET.get('phone')
@@ -212,3 +264,20 @@ def otp(request):
             else:
                 print("fail2")
     return render(request,'customer/otp.html')
+
+from django.contrib.auth.decorators import login_required
+@login_required
+def edit_profile(request):
+    if request.method == 'POST':
+        u_form = UserUpdateForm(request.POST,request.FILES,instance=request.user)
+        if u_form.is_valid():
+            u_form.save()
+            messages.success(request,f'your account has been updated ')
+            return redirect('profile')
+    else:
+        u_form = UserUpdateForm(instance=request.user)
+
+    context = {
+        'u_form':u_form,
+    }
+    return render(request,'customer/edit_profile.html',context)

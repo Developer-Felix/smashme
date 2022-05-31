@@ -18,6 +18,14 @@
             </div>
           </div>
 
+          <!--Error messages from backend-->
+          {% if messages %} {% for message in messages %}
+      <!--Toggle allert message and dismis in seconds-->
+      <div class="alert alert-info alert-dismissible fade show" role="alert">
+        {{message.message}}
+      </div>
+      {% endfor %} {% endif %}
+
           <form method="post">
             {% csrf_token %}
             <!-- Email input -->
